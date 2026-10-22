@@ -1,0 +1,28 @@
+name: Release to PyPI
+
+# Publishes to PyPI when a GitHub Release is published, using PyPI Trusted
+# Publishing (OIDC) -- no API token is stored anywhere. Configure the matching
+# "pending publisher" on PyPI once: owner Maytrella007, repo protonlite,
+# workflow release.yml, environment pypi.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # required for trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
