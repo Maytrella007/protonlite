@@ -151,6 +151,19 @@ def _summary_dict(message: Any) -> dict[str, Any]:
     }
 
 
+def _cmd_mcp(args: argparse.Namespace) -> int:
+    # The MCP server lives behind the optional [mcp] extra so the base install
+    # stays light. Import it only when this runs, and point at the extra if it
+    # is missing instead of surfacing a bare ImportError.
+    try:
+        from protonlite_mcp.server import main as mcp_main
+    except ModuleNotFoundError:
+        print('the MCP server needs the extra: pip install "protonlite[mcp]"', file=sys.stderr)
+        return 1
+    mcp_main()
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="protonlite", description="Read and send Proton Mail from the command line."
@@ -210,6 +223,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     send.add_argument("--sender", help="which of your addresses to send from")
     send.set_defaults(func=_cmd_send)
+
+    mcp_server = sub.add_parser(
+        "mcp", help='run the MCP server over stdio (needs the "protonlite[mcp]" extra)'
+    )
+    mcp_server.set_defaults(func=_cmd_mcp)
 
     return parser
 

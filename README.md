@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.Maytrella007/protonlite -->
+
 # protonlite
 
 A small, dependency-light **Python** client and API for **Proton Mail** (ProtonMail) --
@@ -134,6 +136,9 @@ pip install "protonlite[mcp]"
 protonlite login --user you@proton.me          # one-time; saves a session file
 PROTONLITE_SESSION=~/you@proton.me.json protonlite-mcp
 ```
+
+`protonlite mcp` starts the same server, so `uvx --from "protonlite[mcp]" protonlite mcp` runs
+it without a local install (this is what the MCP registry entry uses).
 
 Wire it into an MCP client (e.g. Claude Desktop / Cursor `mcpServers` config):
 

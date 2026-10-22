@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Maytrella007/protonlite",
+  "description": "Pure-Python Proton Mail / Calendar / Contacts / Drive client with an MCP server. Works on a free plan, no Bridge; the password never reaches the model.",
+  "repository": {
+    "url": "https://github.com/Maytrella007/protonlite",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "protonlite",
+      "version": "0.1.2",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "protonlite[mcp]"
+        }
+      ],
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PROTONLITE_SESSION",
+          "description": "Path to the session file saved by `protonlite login`. The server reuses it and never takes a password.",
+          "isRequired": true,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
