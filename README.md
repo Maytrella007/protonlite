@@ -1,7 +1,8 @@
 # protonlite
 
-A small, dependency-light Python client for **Proton Mail, Calendar, Contacts and Drive** --
-no Proton Mail Bridge, no paid plan.
+A small, dependency-light **Python** client and API for **Proton Mail** (ProtonMail) --
+Mail, Calendar, Contacts and Drive, with no Proton Mail Bridge and no paid plan. Ships an
+optional **MCP server** so an agent (Claude Code, Cursor) can use your mailbox.
 
 Proton has no IMAP or SMTP. The official way in is Proton Mail Bridge, which needs a paid
 plan. `protonlite` talks to Proton's web API directly, so it works on a free account, and the
