@@ -123,3 +123,55 @@ def drive_download(client: ProtonMail, *, path: str, dest_dir: str = ".") -> str
     with open(target, "wb") as fh:
         fh.write(data)
     return f"Downloaded {name} ({len(data)} bytes) to {target}."
+
+
+def drive_upload(
+    client: ProtonMail,
+    *,
+    local_path: str,
+    dest_folder: str = "",
+    name: str = "",
+    mime_type: str = "application/octet-stream",
+) -> str:
+    with open(local_path, "rb") as fh:
+        data = fh.read()
+    fname = name or os.path.basename(local_path)
+    client.drive().upload(dest_folder, fname, data, mime_type)
+    return f"Uploaded {fname} ({len(data)} bytes) to {dest_folder or 'the Drive root'}."
+
+
+def drive_mkdir(client: ProtonMail, *, name: str, parent_folder: str = "") -> str:
+    client.drive().create_folder(parent_folder, name)
+    return f"Created folder {name!r} in {parent_folder or 'the Drive root'}."
+
+
+def drive_move(client: ProtonMail, *, path: str, dest_folder: str) -> str:
+    moved = client.drive().move(path, dest_folder)
+    return f"Moved {moved!r} into {dest_folder or 'the Drive root'}."
+
+
+def drive_rename(client: ProtonMail, *, path: str, new_name: str) -> str:
+    renamed = client.drive().rename(path, new_name)
+    return f"Renamed to {renamed!r}."
+
+
+def drive_trash(client: ProtonMail, *, path: str) -> str:
+    trashed = client.drive().trash(path)
+    return f"Moved {trashed!r} to Drive trash (recoverable from Proton Drive)."
+
+
+def drive_share_link(client: ProtonMail, *, path: str) -> str:
+    info = client.drive().share_link(path)
+    # The whole secret is the URL: the password lives in the fragment after '#'
+    # and never reaches Proton's server. Anyone who gets this URL can open the file.
+    return (
+        f"Public share link for {path}:\n{info['url']}\n\n"
+        "This URL is the entire secret (the password is the part after '#'). "
+        "Anyone with it can open the file without a Proton account. "
+        "Revoke it with drive_unshare_link."
+    )
+
+
+def drive_unshare_link(client: ProtonMail, *, path: str) -> str:
+    removed = client.drive().unshare_link(path)
+    return "Public link revoked." if removed else f"{path} was not shared."

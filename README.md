@@ -153,9 +153,12 @@ Wire it into an MCP client (e.g. Claude Desktop / Cursor `mcpServers` config):
 }
 ```
 
-The server never takes a password -- it reuses the saved session. It exposes `list_messages`,
-`read_message`, `search_messages`, `send_message`, `calendar`, `contacts`, `drive_list` and
-`drive_download`, and returns other people's content wrapped as untrusted data.
+The server never takes a password -- it reuses the saved session. It exposes 15 tools:
+`list_messages`, `read_message`, `search_messages`, `send_message`, `calendar`, `contacts`,
+and a full Proton Drive set -- `drive_list`, `drive_download`, `drive_upload`, `drive_mkdir`,
+`drive_move`, `drive_rename`, `drive_trash`, `drive_share_link` and `drive_unshare_link`. It
+returns other people's content wrapped as untrusted data. `drive_share_link` makes a public
+link whose URL is the whole secret, so it is meant for files you intend to share.
 
 ## Status and limits
 

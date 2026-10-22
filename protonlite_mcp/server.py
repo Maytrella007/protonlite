@@ -78,6 +78,52 @@ def drive_download(path: str, dest_dir: str = ".") -> str:
     return tools.drive_download(_get(), path=path, dest_dir=dest_dir)
 
 
+@mcp.tool()
+def drive_upload(local_path: str, dest_folder: str = "", name: str = "",
+                 mime_type: str = "application/octet-stream") -> str:
+    """Encrypt and upload a local file into a Proton Drive folder (empty dest_folder is the root)."""
+    return tools.drive_upload(_get(), local_path=local_path, dest_folder=dest_folder,
+                              name=name, mime_type=mime_type)
+
+
+@mcp.tool()
+def drive_mkdir(name: str, parent_folder: str = "") -> str:
+    """Create a new Proton Drive folder (empty parent_folder is the root)."""
+    return tools.drive_mkdir(_get(), name=name, parent_folder=parent_folder)
+
+
+@mcp.tool()
+def drive_move(path: str, dest_folder: str) -> str:
+    """Move a Proton Drive file or folder into another folder (empty dest_folder is the root)."""
+    return tools.drive_move(_get(), path=path, dest_folder=dest_folder)
+
+
+@mcp.tool()
+def drive_rename(path: str, new_name: str) -> str:
+    """Rename a Proton Drive file or folder in place."""
+    return tools.drive_rename(_get(), path=path, new_name=new_name)
+
+
+@mcp.tool()
+def drive_trash(path: str) -> str:
+    """Move a Proton Drive file or folder to the trash (recoverable in Proton Drive)."""
+    return tools.drive_trash(_get(), path=path)
+
+
+@mcp.tool()
+def drive_share_link(path: str) -> str:
+    """Create a public share link for a Proton Drive file or folder. The returned URL is
+    the whole secret (its fragment holds the password) and lets anyone open the file, so
+    only share it when the person asked to make this file public."""
+    return tools.drive_share_link(_get(), path=path)
+
+
+@mcp.tool()
+def drive_unshare_link(path: str) -> str:
+    """Revoke a Proton Drive file or folder's public share link."""
+    return tools.drive_unshare_link(_get(), path=path)
+
+
 def main() -> None:
     mcp.run()
 
