@@ -49,9 +49,42 @@ def search_messages(query: str, limit: int = 20) -> str:
 
 
 @mcp.tool()
-def send_message(to: list[str], subject: str, body: str, html: bool = False) -> str:
-    """Send an email. Plain text by default; set html=true to send the body as HTML."""
-    return tools.send(_get(), to=to, subject=subject, body=body, html=html)
+def send_message(to: list[str], subject: str, body: str, html: bool = False,
+                 attachments: list[str] | None = None, confirm: bool = False) -> str:
+    """Send an email. Plain text by default; set html=true to send the body as HTML.
+    attachments is a list of local file paths to attach, e.g. a file you just fetched
+    with drive_download. A send is refused if a recipient is not on the allowlist
+    (see email_policy_status / email_allow). When the confirm-before-sending rule is
+    on, the first call sends nothing and returns a confirmation request; call again
+    with confirm=true once the person has approved."""
+    return tools.send(_get(), to=to, subject=subject, body=body, html=html,
+                      attachments=attachments, confirm=confirm)
+
+
+@mcp.tool()
+def email_policy_status() -> str:
+    """Show the send policy: which recipients the allowlist permits (or that it is open),
+    any hard ceiling set by the PROTON_ALLOWED_RECIPIENTS env var, and whether a send
+    needs confirmation."""
+    return tools.email_policy_status()
+
+
+@mcp.tool()
+def email_allow(recipients: list[str]) -> str:
+    """Set the recipient allowlist for send_message. Pass specific addresses or globs
+    (e.g. *@company.com) to restrict sending to them, ["*"] to allow anyone, or [] to
+    block all sending. A hard ceiling from PROTON_ALLOWED_RECIPIENTS still applies on
+    top and cannot be loosened here."""
+    return tools.email_allow(recipients)
+
+
+@mcp.tool()
+def set_send_confirmation(required: bool) -> str:
+    """Turn the 'confirm before sending' rule on or off. When on, send_message sends
+    nothing until it is called again with confirm=true, so a person can approve first.
+    If PROTON_REQUIRE_SEND_CONFIRMATION is set, the rule is forced on and cannot be
+    turned off here."""
+    return tools.set_send_confirmation(required)
 
 
 @mcp.tool()

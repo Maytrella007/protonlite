@@ -37,8 +37,9 @@ class _Client:
     def read_message(self, mid):
         return self._message
 
-    def send(self, *, to, subject, body, mime_type):
-        self.sent = {"to": to, "subject": subject, "body": body, "mime": mime_type}
+    def send(self, *, to, subject, body, mime_type, attachments=None):
+        self.sent = {"to": to, "subject": subject, "body": body, "mime": mime_type,
+                     "attachments": attachments}
         return types.SimpleNamespace(id="SENT1")
 
     def list_calendars(self):
@@ -81,6 +82,20 @@ class SendCalendarContactsDrive(unittest.TestCase):
         self.assertEqual(c.sent["mime"], "text/plain")
         tools.send(c, to=["a@b.com"], subject="s", body="<p>b</p>", html=True)
         self.assertEqual(c.sent["mime"], "text/html")
+
+    def test_send_with_attachment_reads_the_file(self):
+        import tempfile
+
+        c = _Client()
+        with tempfile.NamedTemporaryFile("wb", suffix=".txt", delete=False) as fh:
+            fh.write(b"hello")
+            path = fh.name
+        out = tools.send(c, to=["a@b.com"], subject="s", body="b", attachments=[path])
+        att = c.sent["attachments"]
+        self.assertEqual(len(att), 1)
+        self.assertEqual(att[0]["data"], b"hello")
+        self.assertEqual(att[0]["mime"], "text/plain")
+        self.assertIn("1 attachment", out)
 
     def test_calendar(self):
         ev = types.SimpleNamespace(start=1_700_000_000, title="Standup")

@@ -164,6 +164,46 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_policy() -> int:
+    # Reuse the same status text the MCP server shows, so the CLI and the agent
+    # describe the policy identically. Neither import needs the [mcp] extra.
+    from protonlite_mcp import tools as _mcp_tools
+
+    print(_mcp_tools.email_policy_status())
+    return 0
+
+
+def _cmd_policy_show(args: argparse.Namespace) -> int:
+    return _print_policy()
+
+
+def _cmd_policy_allow(args: argparse.Namespace) -> int:
+    from protonlite_mcp import policy
+
+    policy.set_allowed(args.recipients)
+    return _print_policy()
+
+
+def _cmd_policy_ceiling(args: argparse.Namespace) -> int:
+    from protonlite_mcp import policy
+
+    if args.clear:
+        policy.set_locked(ceiling=None)
+    elif args.recipients:
+        policy.set_locked(ceiling=args.recipients)
+    else:
+        print("give one or more addresses/globs, or --clear to remove the ceiling", file=sys.stderr)
+        return 1
+    return _print_policy()
+
+
+def _cmd_policy_require_confirm(args: argparse.Namespace) -> int:
+    from protonlite_mcp import policy
+
+    policy.set_locked(require_confirmation=(args.state == "on"))
+    return _print_policy()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="protonlite", description="Read and send Proton Mail from the command line."
@@ -228,6 +268,35 @@ def build_parser() -> argparse.ArgumentParser:
         "mcp", help='run the MCP server over stdio (needs the "protonlite[mcp]" extra)'
     )
     mcp_server.set_defaults(func=_cmd_mcp)
+
+    policy_p = sub.add_parser(
+        "policy", help="manage the MCP server's send policy (allowlist and confirmation)"
+    )
+    psub = policy_p.add_subparsers(dest="policy_cmd", required=True)
+
+    p_show = psub.add_parser("show", help="print the current send policy")
+    p_show.set_defaults(func=_cmd_policy_show)
+
+    p_allow = psub.add_parser(
+        "allow", help="set the recipient allowlist (addresses or globs; '*' opens it, none blocks all)"
+    )
+    p_allow.add_argument("recipients", nargs="*", help="addresses or globs; omit to block all sends")
+    p_allow.set_defaults(func=_cmd_policy_allow)
+
+    p_ceiling = psub.add_parser(
+        "ceiling",
+        help="set a HARD recipient ceiling the agent cannot loosen (empty + --clear removes it)",
+    )
+    p_ceiling.add_argument("recipients", nargs="*", help="addresses or globs the agent may never exceed")
+    p_ceiling.add_argument("--clear", action="store_true", help="remove the hard ceiling")
+    p_ceiling.set_defaults(func=_cmd_policy_ceiling)
+
+    p_rc = psub.add_parser(
+        "require-confirm",
+        help="on: enforce confirmation so the agent cannot send (a person sends from the CLI); off: lift it",
+    )
+    p_rc.add_argument("state", choices=["on", "off"])
+    p_rc.set_defaults(func=_cmd_policy_require_confirm)
 
     return parser
 

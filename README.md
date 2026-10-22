@@ -153,12 +153,55 @@ Wire it into an MCP client (e.g. Claude Desktop / Cursor `mcpServers` config):
 }
 ```
 
-The server never takes a password -- it reuses the saved session. It exposes 15 tools:
+The server never takes a password -- it reuses the saved session. It exposes 18 tools:
 `list_messages`, `read_message`, `search_messages`, `send_message`, `calendar`, `contacts`,
-and a full Proton Drive set -- `drive_list`, `drive_download`, `drive_upload`, `drive_mkdir`,
-`drive_move`, `drive_rename`, `drive_trash`, `drive_share_link` and `drive_unshare_link`. It
+a full Proton Drive set -- `drive_list`, `drive_download`, `drive_upload`, `drive_mkdir`,
+`drive_move`, `drive_rename`, `drive_trash`, `drive_share_link`, `drive_unshare_link` -- and
+three send-policy tools: `email_policy_status`, `email_allow` and `set_send_confirmation`. It
 returns other people's content wrapped as untrusted data. `drive_share_link` makes a public
 link whose URL is the whole secret, so it is meant for files you intend to share.
+`send_message` can also attach local files, for example one you just fetched with
+`drive_download`.
+
+### Send policy (allowlist and confirmation)
+
+`send_message` is governed by a recipient allowlist and an optional "confirm before sending"
+rule, both of which the agent can read and change:
+
+- `email_policy_status` shows the current allowlist and whether confirmation is on.
+- `email_allow` sets the allowlist -- specific addresses or globs (`*@company.com`) to
+  restrict sending, `["*"]` to allow anyone, `[]` to block all sends.
+- `set_send_confirmation` turns the confirm rule on or off. When on, `send_message` sends
+  nothing on the first call and returns a confirmation request; it sends only when called
+  again with `confirm=true`.
+
+These three tools are what the **agent** can change, so on their own they are convenient but
+advisory. The **hard** controls are set out of band, by a person, and the agent cannot loosen
+them -- with env vars, or with the `protonlite policy` CLI:
+
+- **Recipient ceiling.** `PROTON_ALLOWED_RECIPIENTS` (comma-separated addresses/globs), or
+  `protonlite policy ceiling <addrs>`, is a ceiling the `email_allow` tool cannot exceed: a
+  send to anyone outside it is refused no matter what the agent does.
+- **Hard confirmation.** `PROTON_REQUIRE_SEND_CONFIRMATION=1`, or `protonlite policy
+  require-confirm on`, turns `send_message` off for the agent entirely -- it is always
+  refused, and the `confirm` argument cannot lift it, so a person sends from a terminal with
+  `protonlite send`. (The agent's own `set_send_confirmation` only controls the softer
+  two-step rule, where `confirm=true` is enough; a determined or manipulated agent can pass
+  that itself, so it is a checkpoint, not a barrier.)
+
+Manage the hard policy from a terminal:
+
+```bash
+protonlite policy show                         # print the effective policy
+protonlite policy ceiling *@your-company.com   # a ceiling the agent cannot exceed
+protonlite policy require-confirm on            # agent can no longer send; you send via the CLI
+protonlite policy require-confirm off           # lift it
+```
+
+Also run the server only in an MCP client that asks you to approve each tool call, because
+`send_message` and `drive_upload` read local files and can send them out. For a send gate the
+agent can never reach -- a fail-closed human-approval hook on every send -- use
+[hermes-proton](#related) below.
 
 ## Status and limits
 

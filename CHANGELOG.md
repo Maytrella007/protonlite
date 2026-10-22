@@ -9,11 +9,27 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Proton Drive write tools on the MCP server: `drive_upload`, `drive_mkdir`,
   `drive_move`, `drive_rename`, `drive_trash`, `drive_share_link` and
-  `drive_unshare_link`. The server now exposes 15 tools (was 8). The library
+  `drive_unshare_link`. The server now exposes 18 tools (was 8). The library
   already supported these operations; this wires them through to MCP clients.
 - `drive_share_link` returns a public link whose URL is the whole secret (the
   password rides in the fragment), so its tool description tells an agent to use
   it only for files the person means to share.
+- `send_message` now takes `attachments`, a list of local file paths to attach,
+  so an agent can download a file with `drive_download` and send it on.
+- Send-policy tools the agent can read and change: `email_policy_status`,
+  `email_allow` (set a recipient allowlist, open it, or block all sends) and
+  `set_send_confirmation` (a soft two-step rule where `confirm=true` sends). The
+  server now exposes 18 tools.
+- A `protonlite policy` CLI for the **hard** controls a person sets out of band,
+  which the agent cannot loosen: `policy show`, `policy ceiling <addrs>` (a
+  recipient ceiling the allowlist tool cannot exceed) and `policy require-confirm
+  on|off`. When hard confirmation is on (via the CLI or the env vars
+  `PROTON_ALLOWED_RECIPIENTS` / `PROTON_REQUIRE_SEND_CONFIRMATION`), `send_message`
+  is refused outright for the agent -- the `confirm` argument cannot lift it -- and
+  a person sends from the terminal with `protonlite send`.
+- `drive_move`/`drive_rename` report the plaintext name (not the opaque link id),
+  and `drive_list` labels its size as the encrypted on-disk size, so a size check
+  after a round trip does not look like corruption.
 
 ## [0.1.2] - 2026-10-22
 
